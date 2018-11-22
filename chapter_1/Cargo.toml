@@ -1,0 +1,8 @@
+[package]
+name = "chapter_1"
+version = "0.0.0"
+authors = ["YOU!"]
+
+[dependencies]
+# Well, you could be lazy and add something here, but
+# really try to build it with just the standard library. :)
