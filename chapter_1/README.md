@@ -58,9 +58,9 @@ The first byte begins with four `1`s, and all consequent bytes begin with one `1
 
 * If the first bit is set to `0`, that byte is a single byte that contains ASCII codepoint. Remember when I said that ASCII is just 7 bits? Turned out to be useful here!
 * If the first bit is set to `1` and is followed by more `1` bits, then this is the first byte of a sequence of bytes that encode a full Unicode codepoint, with it's byte length set to the number of those `1` bits.
-* If the first bit is set to `1` and is followed by `0`, that byte is part of a Unicode codepoint, but it did not begin it! This is also how rust knows when to panic if you slice a `&str` at invalid indexes. Clever, huh?
+* If the first bit is set to `1` and is followed by `0`, that byte is part of a Unicode codepoint, but it did not begin it! This is also how Rust knows when to panic if you slice a `&str` at invalid indexes. Clever, huh?
 
-This also means that if you are writing a parser, even if your source code permits UTF-8 (in strings for example), you can **safely** read it as just bytes and ignore any values larger than 127 (that is, any bytes that have the first bit set to `1`). As long as you don't interrupt the unicode sequences, and most if not all of your tokens are happy to be written in ASCII, you can just iterate on bytes and save yourself the hassle.
+This also means that if you are writing a Lexer, even if your source code permits UTF-8 (in strings for example), you can **safely** read it as just bytes and ignore any values larger than 127 (that is, any bytes that have the first bit set to `1`). As long as you don't interrupt the unicode sequences, and most if not all of your tokens are happy to be written in ASCII, you can iterate on bytes and save yourself the hassle (and the computer the work).
 
 Also, Rust has nice first class byte literal support, so if `'a'` makes a `char`, `b'a'` makes a `u8`. Analogous if `"foobar"` is a `&str`, `b"foobar"` is a `&[u8]` slice.
 
