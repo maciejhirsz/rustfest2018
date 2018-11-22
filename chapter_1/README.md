@@ -64,4 +64,4 @@ This also means that if you are writing a Lexer, even if your source code permit
 
 Also, Rust has nice first class byte literal support, so if `'a'` makes a `char`, `b'a'` makes a `u8`. Analogous if `"foobar"` is a `&str`, `b"foobar"` is a `&[u8]` slice.
 
-Armed with this knowledge, happy hacking!
+Armed with this knowledge, writing a Lexer should be a breeze!

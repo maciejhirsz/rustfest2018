@@ -1,0 +1,7 @@
+[package]
+name = "chapter_2"
+version = "0.0.0"
+authors = ["YOU!"]
+
+[dependencies]
+# Ok, go ahead :)

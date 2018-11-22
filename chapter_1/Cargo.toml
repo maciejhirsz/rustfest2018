@@ -4,5 +4,6 @@ version = "0.0.0"
 authors = ["YOU!"]
 
 [dependencies]
-# Well, you could be lazy and add something here, but
-# really try to build it with just the standard library. :)
+# Do you _really_ need to put anything here? :)
+#
+# Try to write it with just standard library, ask for help if you need it.

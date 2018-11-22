@@ -1,12 +1,29 @@
 #[derive(PartialEq, Debug, Clone, Copy)]
 pub enum Token {
+    /// Should match a combination of letters a-z and A-Z.
+    /// We don't need underscores but feel free to add them.
     Identifier,
+
+    /// We will just need integers, so sequences of digits 0-9
+    /// will suffice
     Number,
+
+    /// '+'
     Add,
+
+    /// '-'
     Subtract,
+
+    /// '*'
     Multiply,
+
+    /// '/'
     Divide,
+
+    /// '='
     Assign,
+
+    /// ';'
     Semicolon,
 }
 
@@ -33,7 +50,7 @@ impl Iterator for Lexer {
 #[cfg(test)]
 #[test]
 fn test() {
-    let source = "four = 2 + 2; omg = 1 / 0;";
+    let source = "four = 2 + 2; omg = 12345 / 0;";
 
     let expect = &[
         Token::Identifier,
