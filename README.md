@@ -20,4 +20,7 @@ We will also have somewhat of a focus on parsing something resembling a programm
 
 ## Chapters
 
-* **Chapter 1** - What is *Lexical Analysis*? Do you need it? Let's write a Lexer!
+* [**Chapter 1**](chapter_1): What is *Lexical Analysis*? What is a *Token*? Do you need it? Let's write a Lexer!
+* [**Chapter 2**](chapter_2): Plant a tree! What is an *Abstract Syntax Tree*? Who is *Vaughan Pratt*? Let's write a Parser!
+* [**Chapter 3**](chapter_3): Unboxing the `Box`es. Memory layout and how to make things tighter and faster.
+* [**Chapter 3**](chapter_4): Jumping around *Lookup Tables*. Why does **C** have strings that end with **`nul`**?
