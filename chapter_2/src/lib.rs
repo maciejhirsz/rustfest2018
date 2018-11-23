@@ -65,7 +65,7 @@ impl Parse for Expression {
     fn parse(parser: &mut Parser) -> Result<Expression> {
         // Suggested way to do this:
         //
-        // match parser.lexer.token {
+        // match next_token {
         //     Token::_____ => ______::parse(parser),
         //
         //     ...
