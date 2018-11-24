@@ -78,7 +78,9 @@ Okay. Let's modify our input slightly to `a = b + 2 * c`, the tree is now going 
 
 Notice something? We only swapped the two operators - '+' and '\*' - and our tree looks different! That is because of *operator precedence* or *operator binding power*. You can most likely Google operator precedence tables for mostly any programming languages that aren't Lisps. Operator precedence tells us which operations should be performed first, in this case multiplication should be done before addition, and so the Parser we are going to write needs to be able to recognize that and *balance the tree* accordingly.
 
-This is where our buddy **Vaughan Pratt** comes in! In a 1973 paper Pratt described a way to build a Recursive Descent Parser that handles operator precedence in a way that is simple, easy to understand and really quite *elegant*. Some Rustic-pseudocode would look like this:
+#### Top-Down Operator Precedence
+
+This is where our buddy **Vaughan Pratt** comes in! In a 1973 paper Pratt described a way to build a Recursive Descent Parser that handles operator precedence in a way that is simple, easy to understand and really quite *elegant*. For our usecase we will focus just on the operator precedence parsing itself. Some Rustic-pseudocode would look like this:
 
 ```
 fn parse_nested_expression(parser: Parser, mut left: Expression, lbp: u8) -> Expression {
@@ -88,7 +90,7 @@ fn parse_nested_expression(parser: Parser, mut left: Expression, lbp: u8) -> Exp
             None           => break,
         }
 
-        if lbp < operator.binding_power() {
+        if lbp > operator.binding_power() {
             break;
         }
 
@@ -106,8 +108,11 @@ fn parse_nested_expression(parser: Parser, mut left: Expression, lbp: u8) -> Exp
 }
 ```
 
-So we loop and read operators for the next binary expression and compares the binding powers of the expression on the side with the binding power of the upcoming operator. Let's say we have a multiplication followed by addition, such as `a * b +`. Our stack will be aware of something like this:
+So we loop and read operators for the next binary expression and compares the binding powers of the expression on the side with the binding power of the upcoming operator. Let's say we have a multiplication followed by addition, such as `a * b +`. The operations we do will follow something like this:
 
-* Parsing an expression produced `a`, we check if an operator follows, it does. Since `a` is an atomic expression that cannot be broken down, the `lbp` (left binding power) passed in should have the highest possible value, so we use `'*'` as an operator and attempt to construct the right hand side of the binary expression.
+* Parsing an expression produced `a`, we check if an operator follows, it does. We starting with the default left binding power, or `lbp` set to `0`, so we use `'*'` as an operator and attempt to construct the right hand side of the binary expression.
 * We jump, or *descend* one stack frame down when calling `parse_simple_expression`. This will first give us an expression for the next token without bothering with operators, in our case we get `b`, we pop back and return to our loop.
-* Ok, so now that we have `a * b` as a potential binary expression, should the right side be something more? We don't know, so we *descend* into another `parse_nested_expression`, passing on the binding power of the multiplication.
+* Ok, so now that we have `a * b` as a potential binary expression, should the right side be something more? We don't know, so we *descend* into another `parse_nested_expression`, passing on the binding power of the multiplication as `lbp` in the recursion.
+* So now we are back at the loop, but at a different stack frame! Since `lbp` - the binding power for multiplication - is higher than that of addition, we break the loop and use the entire `BinaryExpression` of multiplication as left-hand operand for addition. If we continued, then we would have addition as right hand operand of multiplication, which would not be correct!
+
+Another interesting side effect of doing things this way is that we don't have to worry about representing parenthesized expressions, such as `(2 + 2) * 3` in the AST! When parsing, the parenthesis would trump operator precedence, thus changing the balance of the tree without the need for any special container struct. In the same way, when printing out the AST back to source code, we can check if the operator precedence holds, and if it does not, wrap the expressions in parenthesis. Since our token definition does not include parenthesis, we can just skip this, but feel free to play with it if you wish!

@@ -6,9 +6,8 @@
 
 #### What should I do here?
 
-* Look at the code in the [`src`](src) directory, those are all analogous to previous chapter.
 * Try to migrate the code from previous chapter to this one and make it compile and run.
-* Read on `toolshed`, find another crate or build an arena allocator yourself if you feel brave!
+* Look over docs for [`toolshed`](https://crates.io/crates/toolshed). Find another crate for an `Arena` allocator if you'd like, or try to write your own if you aren't afraid of using `unsafe`!
 
 #### Unboxing the `Box`es. Memory layout and how to make things tighter and faster.
 
@@ -36,3 +35,12 @@ Truth is, it depends. `Box` is one of the most universal pointers in Rust and yo
 
 #### Enter `Arena`
 
+There is one assumption we can make about the AST our Parser produces is that it's likely that it's all going to be put in memory in one go, some transformations can be done on it, it might be printed out to source code again, or translated to an AST of some other language, and then discarded all at once. That might not always be true, particularly if your Parser is part of something like the [Rust Language Server](https://github.com/rust-lang/rls), but in a lot of cases it will be true. If that assumption holds, then we can do something clever and use an **Arena**.
+
+The general principle here is that you do a heap allocation once, and then put all your stuff on that big array of memory. The whole process of the allocator looking for some place in memory where it can fit it turns into a single increment of a pointer. Implementing such an Arena might require some *unsafe* magic, but it is a problem that is easy to encapsulate. Rust lifetimes also become very handy here to ensure that our tree does not outlive the Arena it was allocated on. This is making something that would be a nightmare in C, especially with multiple people involved, actually very pleasant to work with (assuming the underlying primitives are implemented correctly).
+
+So with that, let's try to rewrite the Parser from Chapter 2 using Arena allocations and benchmark the difference!
+
+#### Bonus material
+
+If you want to learn more about *heap* and *stack* memory in Rust, and which types use what, take a look at the excellent [Rust container cheat sheet](https://docs.google.com/presentation/d/1q-c7UAyrUlM-eZyTo1pd8SZ0qwA_wYxmPZVOQkoDmH4/edit#slide=id.p).
