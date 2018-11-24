@@ -2,15 +2,17 @@
 
 ### How I Learned to Stop Worrying and Love ASCII
 
-## What should I do here?
+## Chapter 1.
+
+#### What should I do here?
 
 * Look at the code in the [`src`](src) directory.
 * Run `cargo test` to see that the test there compiles but fails.
-* Make it pass :).
+* Make the tests pass :).
 * Read on for more information.
 * If this seems too easy, I'd still recommend reading below before skipping to the next chapter.
 
-## What is *Lexical Analysis*? Do you need it? Let's write a Lexer!
+#### What is *Lexical Analysis*? Do you need it? Let's write a Lexer!
 
 Over the course of those chapters we are going to be building a parser for a simple language that can do some math. The first thing we might want to do is do Lexical Analaysis, or write a *Lexer*, sometimes also called a *Tokenizer*.
 
@@ -20,7 +22,7 @@ Lexical Analysis helps us by reducing the scope of what we are trying to achieve
 
 Your computer, for all it's speed, is really just a dumb bunch of silicon wrapped in plastic and/or aluminum or other metals. It does not have your brain in it. When it reads some source code from memory, it's just a bunch of bits of a given length, it has no idea what it is. Before we try to make the computer "understand" what the source code _means_, we can first tell it what it consists of - what are the bits, the words, **the Tokens**.
 
-## Do you need a Lexer?
+#### Do you need a Lexer?
 
 Having your Parser depend on a Lexer introduces some overhead. That is to say, there is probably a way to make a parser without it, and with all things in programming, *the less your code does, the faster it does it*.
 
@@ -28,7 +30,7 @@ For a lot of things Lexers might be a bit redundant when matching on bytes in Pa
 
 Lexers do bring a lot of clarity into your code however. In JavaScript `'t'` can be a start of `true`, but also `try`, `throw`, or any identifier like `toBeOrNotToBe`. Handling all of that in your Parser code could quickly become messy. The separation of concerns between Lexer and Parser will make reasoning about the latter much easier, *especially* if the grammar of the code you are trying to parse is complex (and it is for virtually any modern language that we write interesting code in).
 
-## Cutting corners: `char`s or `u8` bytes?
+#### Cutting corners: `char`s or `u8` bytes?
 
 You might have noticed that I just wrote *"matching on bytes"*, not *"matching on characters"*. We want to parse a `&str` source, which is UTF-8 encoded text in a slice of bytes. Calling `.chars()` on a `&str` gives an iterator of `char`s that the string represents, but those `chars` are **not** what is stored inside the string. The `Chars` iterator from the standard library is really fast, but if you have learned anything from last segment, it is that doing some work very fast is still slower than not doing that work *at all*. So it goes with converting bytes to `chars`.
 
