@@ -168,11 +168,11 @@ mod tests {
                         }.into()),
                         operator: Operator::Add,
                         right: Box::new(BinaryExpression {
-                            right: Box::new(Identifier {
+                            left: Box::new(Identifier {
                                 identifier: "foo".into(),
                             }.into()),
                             operator: Operator::Divide,
-                            left: Box::new(Number {
+                            right: Box::new(Number {
                                 number: 3,
                             }.into()),
                         }.into()),
