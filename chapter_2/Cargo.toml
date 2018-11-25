@@ -5,3 +5,4 @@ authors = ["YOU!"]
 
 [dependencies]
 chapter_1 = { path = "../chapter_1" }
+pretty_assertions = "0.4"

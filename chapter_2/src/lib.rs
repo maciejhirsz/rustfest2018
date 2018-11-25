@@ -1,4 +1,5 @@
 extern crate chapter_1;
+extern crate pretty_assertions;
 
 mod ast;
 
@@ -27,23 +28,50 @@ impl<'a> Parser<'a> {
         T::parse(self)
     }
 
-    pub fn parse_nested(&mut self, left: Expression) -> Result<Expression> {
-        let operator = match self.lexer.peek().cloned() {
-            Some(token) if token.is_operator() => {
-                self.lexer.next();
-
-                Operator::from(token)
+    pub fn parse_simple(&mut self) -> Result<Expression> {
+        match self.lexer.peek().cloned() {
+            Some(Token::Add) |
+            Some(Token::Subtract) => {
+                UnaryExpression::parse(self).map(Into::into)
             },
-            _ => return Ok(left),
-        };
+            Some(Token::Number(_)) => {
+                Number::parse(self).map(Into::into)
+            },
+            Some(Token::Identifier(_)) => {
+                Identifier::parse(self).map(Into::into)
+            },
+            _ => return Err(ParseError),
+         }
+    }
 
-        let right: Expression = self.parse()?;
+    pub fn parse_nested(&mut self, mut left: Expression, lbp: u8) -> Result<Expression> {
+        loop {
+            let operator = match self.lexer.peek().cloned() {
+                Some(token) if token.is_operator() => {
+                    Operator::from(token)
+                },
+                _ => return Ok(left),
+            };
 
-        Ok(Expression::BinaryExpression(BinaryExpression {
-            left: Box::new(left),
-            operator,
-            right: Box::new(right),
-        }))
+            let rbp = operator.binding_power();
+
+            if lbp > rbp {
+                break;
+            }
+
+            self.lexer.next();
+
+            let right: Expression = self.parse_simple()?;
+            let right = self.parse_nested(right, rbp)?;
+
+            left = Expression::BinaryExpression(BinaryExpression {
+                left: Box::new(left),
+                operator,
+                right: Box::new(right),
+            });
+        }
+
+        Ok(left)
     }
 }
 
@@ -61,7 +89,25 @@ pub trait Parse: Sized {
 
 impl Parse for Program {
     fn parse(parser: &mut Parser) -> Result<Program> {
-        Err(ParseError)
+        let mut body = Vec::new();
+
+        loop {
+            match parser.lexer.peek() {
+                Some(Token::Semicolon) => {
+                    parser.lexer.next();
+
+                    continue;
+                },
+                Some(_) => {
+                    body.push(parser.parse()?);
+                },
+                None => break,
+            }
+        }
+
+        Ok(Program {
+            body
+        })
     }
 }
 
@@ -116,44 +162,18 @@ impl Parse for UnaryExpression {
     }
 }
 
-// impl Parse for BinaryExpression {
-//     fn parse(parser: &mut Parser) -> Result<BinaryExpression> {
-//         Err(ParseError)
-//     }
-// }
-
 impl Parse for Expression {
     fn parse(parser: &mut Parser) -> Result<Expression> {
-        let left = match parser.lexer.peek().cloned() {
-            Some(Token::Add) |
-            Some(Token::Subtract) => {
-                UnaryExpression::parse(parser)?.into()
-            },
-            Some(Token::Number(_)) => {
-                Number::parse(parser)?.into()
-            },
-            Some(Token::Identifier(_)) => {
-                Identifier::parse(parser)?.into()
-            },
-            _ => return Err(ParseError),
-         };
+        let left = parser.parse_simple()?;
 
-         parser.parse_nested(left)
-        // Suggested way to do this:
-        //
-        // match next_token {
-        //     Token::_____ => ______::parse(parser),
-        //
-        //     ...
-        //
-        //     _ => Err(ParseError),
-        // }
+         parser.parse_nested(left, 0)
     }
 }
 
 #[cfg(test)]
 mod tests {
     use super::*;
+    use pretty_assertions::assert_eq;
 
     #[test]
     fn parse_identifier() {
@@ -213,6 +233,8 @@ mod tests {
         let source = "foo = 42; bar = 10 * foo + foo / 3;";
 
         let program: Program = Parser::new(source).parse().unwrap();
+//
+        // panic!("{:#?}", program);
 
         assert_eq!(program, Program {
             body: vec![
@@ -242,11 +264,11 @@ mod tests {
                         }.into()),
                         operator: Operator::Add,
                         right: Box::new(BinaryExpression {
-                            right: Box::new(Identifier {
+                            left: Box::new(Identifier {
                                 identifier: "foo".into(),
                             }.into()),
                             operator: Operator::Divide,
-                            left: Box::new(Number {
+                            right: Box::new(Number {
                                 number: 3,
                             }.into()),
                         }.into()),

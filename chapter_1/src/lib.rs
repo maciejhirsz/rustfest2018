@@ -40,6 +40,7 @@ impl<'source> Token<'source> {
     }
 }
 
+
 /// This struct needs some fields!
 pub struct Lexer<'a> {
     source: &'a str,

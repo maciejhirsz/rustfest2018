@@ -23,6 +23,18 @@ pub enum Operator {
     Assign,
 }
 
+impl Operator {
+    pub fn binding_power(&self) -> u8 {
+        match self {
+            Operator::Add |
+            Operator::Subtract => 2,
+            Operator::Multiply |
+            Operator::Divide => 3,
+            Operator::Assign => 1,
+        }
+    }
+}
+
 impl<'source> From<Token<'source>> for Operator {
     fn from(token: Token<'source>) -> Operator {
         match token {
