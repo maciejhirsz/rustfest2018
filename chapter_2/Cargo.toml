@@ -4,4 +4,4 @@ version = "0.0.0"
 authors = ["YOU!"]
 
 [dependencies]
-# Ok, go ahead :)
+chapter_1 = { path = "../chapter_1" }

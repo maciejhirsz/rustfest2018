@@ -1,3 +1,5 @@
+use chapter_1::Token;
+
 #[derive(PartialEq, Debug, Clone)]
 pub struct Program {
     pub body: Vec<Expression>
@@ -19,6 +21,19 @@ pub enum Operator {
 
     /// '='
     Assign,
+}
+
+impl<'source> From<Token<'source>> for Operator {
+    fn from(token: Token<'source>) -> Operator {
+        match token {
+            Token::Add => Operator::Add,
+            Token::Subtract => Operator::Subtract,
+            Token::Multiply => Operator::Multiply,
+            Token::Divide => Operator::Divide,
+            Token::Assign => Operator::Assign,
+            _ => panic!("Not an operator!"),
+        }
+    }
 }
 
 // It tends to be a good practice to pack `struct`s

@@ -1,21 +1,49 @@
+extern crate chapter_1;
+
 mod ast;
+
+pub use chapter_1::{Lexer, Token};
+pub use std::iter::Peekable;
 
 pub use ast::*;
 
 /// This struct needs some fields!
 ///
 /// Try to incorporate the Lexer from the previous chapter inside here
-pub struct Parser;
+pub struct Parser<'a> {
+    pub lexer: Peekable<Lexer<'a>>,
+}
 
-impl Parser {
+impl<'a> Parser<'a> {
     /// It also needs some code
-    pub fn new(source: &str) -> Self {
-        Parser
+    pub fn new(source: &'a str) -> Self {
+        Parser {
+            lexer: Lexer::new(source).peekable(),
+        }
     }
 
     /// A bit of a helper that will improve ergonomics
     pub fn parse<T: Parse>(&mut self) -> Result<T> {
         T::parse(self)
+    }
+
+    pub fn parse_nested(&mut self, left: Expression) -> Result<Expression> {
+        let operator = match self.lexer.peek().cloned() {
+            Some(token) if token.is_operator() => {
+                self.lexer.next();
+
+                Operator::from(token)
+            },
+            _ => return Ok(left),
+        };
+
+        let right: Expression = self.parse()?;
+
+        Ok(Expression::BinaryExpression(BinaryExpression {
+            left: Box::new(left),
+            operator,
+            right: Box::new(right),
+        }))
     }
 }
 
@@ -39,30 +67,78 @@ impl Parse for Program {
 
 impl Parse for Identifier {
     fn parse(parser: &mut Parser) -> Result<Identifier> {
-        Err(ParseError)
+        match parser.lexer.next() {
+            Some(Token::Identifier(slice)) => {
+                Ok(Identifier {
+                    identifier: slice.to_string(),
+                })
+            },
+            _ => Err(ParseError)
+        }
     }
 }
 
 impl Parse for Number {
     fn parse(parser: &mut Parser) -> Result<Number> {
-        Err(ParseError)
+        match parser.lexer.next() {
+            Some(Token::Number(number)) => {
+                Ok(Number {
+                    number,
+                })
+            },
+            _ => Err(ParseError)
+        }
+    }
+}
+
+impl Parse for Operator {
+    fn parse(parser: &mut Parser) -> Result<Operator> {
+        match parser.lexer.next() {
+            Some(Token::Add) => Ok(Operator::Add),
+            Some(Token::Subtract) => Ok(Operator::Subtract),
+            Some(Token::Multiply) => Ok(Operator::Multiply),
+            Some(Token::Divide) => Ok(Operator::Divide),
+            Some(Token::Assign) => Ok(Operator::Assign),
+            _ => Err(ParseError),
+        }
     }
 }
 
 impl Parse for UnaryExpression {
     fn parse(parser: &mut Parser) -> Result<UnaryExpression> {
-        Err(ParseError)
+        let operator = parser.parse()?;
+        let operand = Box::new(parser.parse()?);
+
+        Ok(UnaryExpression {
+            operator,
+            operand,
+        })
     }
 }
 
-impl Parse for BinaryExpression {
-    fn parse(parser: &mut Parser) -> Result<BinaryExpression> {
-        Err(ParseError)
-    }
-}
+// impl Parse for BinaryExpression {
+//     fn parse(parser: &mut Parser) -> Result<BinaryExpression> {
+//         Err(ParseError)
+//     }
+// }
 
 impl Parse for Expression {
     fn parse(parser: &mut Parser) -> Result<Expression> {
+        let left = match parser.lexer.peek().cloned() {
+            Some(Token::Add) |
+            Some(Token::Subtract) => {
+                UnaryExpression::parse(parser)?.into()
+            },
+            Some(Token::Number(_)) => {
+                Number::parse(parser)?.into()
+            },
+            Some(Token::Identifier(_)) => {
+                Identifier::parse(parser)?.into()
+            },
+            _ => return Err(ParseError),
+         };
+
+         parser.parse_nested(left)
         // Suggested way to do this:
         //
         // match next_token {
@@ -72,8 +148,6 @@ impl Parse for Expression {
         //
         //     _ => Err(ParseError),
         // }
-
-        Err(ParseError)
     }
 }
 
@@ -121,7 +195,7 @@ mod tests {
     fn parse_binary_expression() {
         let source = "5 * 3;";
 
-        let binary: BinaryExpression = Parser::new(source).parse().unwrap();
+        let binary: Expression = Parser::new(source).parse().unwrap();
 
         assert_eq!(binary, BinaryExpression {
             left: Box::new(Number {
@@ -131,7 +205,7 @@ mod tests {
             right: Box::new(Number {
                 number: 3,
             }.into()),
-        });
+        }.into());
     }
 
     #[test]

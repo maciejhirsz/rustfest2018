@@ -27,10 +27,37 @@ pub enum Token<'source> {
     Semicolon,
 }
 
+impl<'source> Token<'source> {
+    pub fn is_operator(&self) -> bool {
+        match self {
+            Token::Add |
+            Token::Subtract |
+            Token::Multiply |
+            Token::Divide |
+            Token::Assign => true,
+            _ => false
+        }
+    }
+}
+
 /// This struct needs some fields!
 pub struct Lexer<'a> {
     source: &'a str,
     index: usize,
+}
+
+// We aren't using this, but this is a good show case for
+// generics
+pub struct GenericLexer<Iter: Iterator<Item = u8>> {
+    source: Iter
+}
+
+impl<Iter: Iterator<Item = u8>> GenericLexer<Iter> {
+    pub fn new(source: Iter) -> Self {
+        GenericLexer {
+            source
+        }
+    }
 }
 
 impl<'a> Lexer<'a> {
