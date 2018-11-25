@@ -1,12 +1,12 @@
 #[derive(PartialEq, Debug, Clone, Copy)]
-pub enum Token {
+pub enum Token<'source> {
     /// Should match a combination of letters a-z and A-Z.
     /// We don't need underscores but feel free to add them.
-    Identifier,
+    Identifier(&'source str),
 
     /// We will just need integers, so sequences of digits 0-9
     /// will suffice
-    Number,
+    Number(u64),
 
     /// '+'
     Add,
@@ -43,15 +43,22 @@ impl<'a> Lexer<'a> {
     }
 }
 
+// Douglas Crockford - Syntaxation | Pratt Parser
+
+
 /// We will also use the `Iterator` trait from the
 /// standard library for our Lexer.
 impl<'a> Iterator for Lexer<'a> {
-    type Item = Token;
+    type Item = Token<'a>;
 
-    fn next(&mut self) -> Option<Token> {
-        loop {
-            let byte = self.source.as_bytes().get(self.index)?;
+    fn next(&mut self) -> Option<Token<'a>> {
+        let token = loop {
+            let bytes: &[u8] = self.source.as_bytes();
+            let byte: &u8 = bytes.get(self.index)?;
+
+            let token_start = self.index;
             self.index += 1;
+
 
             match *byte {
                 b'a'...b'z' |
@@ -67,31 +74,42 @@ impl<'a> Iterator for Lexer<'a> {
                         }
                     }
 
-                    break Some(Token::Identifier);
+                    let slice = self.source
+                            .get(token_start..self.index)?;
+
+                    break Token::Identifier(slice);
                 },
                 b'0'...b'9' => {
+                    let mut num: u64 = (*byte - b'0') as u64;
+
                     loop {
                         let byte = self.source.as_bytes().get(self.index)?;
 
-                        match byte {
-                            b'0'...b'9' => self.index += 1,
+                        match *byte {
+                            b'0'...b'9' => {
+                                num = num * 10 + ((*byte - b'0') as u64);
+
+                                self.index += 1;
+                            },
 
                             _ => break,
                         }
                     }
 
-                    break Some(Token::Number);
+                    break Token::Number(num);
                 },
-                b'+' => break Some(Token::Add),
-                b'-' => break Some(Token::Subtract),
-                b'*' => break Some(Token::Multiply),
-                b'/' => break Some(Token::Divide),
-                b'=' => break Some(Token::Assign),
-                b';' => break Some(Token::Semicolon),
+                b'+' => break Token::Add,
+                b'-' => break Token::Subtract,
+                b'*' => break Token::Multiply,
+                b'/' => break Token::Divide,
+                b'=' => break Token::Assign,
+                b';' => break Token::Semicolon,
                 b' ' | b'\n' => continue,
-                _ => break None,
+                _ => return None,
             }
-        }
+        };
+
+        Some(token)
     }
 }
 
@@ -101,17 +119,17 @@ fn test() {
     let source = "four = 2 + 2; omg = 12345 / 0;";
 
     let expect = &[
-        Token::Identifier,
+        Token::Identifier("four"),
         Token::Assign,
-        Token::Number,
+        Token::Number(2),
         Token::Add,
-        Token::Number,
+        Token::Number(2),
         Token::Semicolon,
-        Token::Identifier,
+        Token::Identifier("omg"),
         Token::Assign,
-        Token::Number,
+        Token::Number(12345),
         Token::Divide,
-        Token::Number,
+        Token::Number(0),
         Token::Semicolon,
     ];
 
