@@ -108,7 +108,7 @@ fn parse_nested_expression(parser: Parser, mut left: Expression, lbp: u8) -> Exp
 }
 ```
 
-So we loop and read operators for the next binary expression and compares the binding powers of the expression on the side with the binding power of the upcoming operator. Let's say we have a multiplication followed by addition, such as `a * b +`. The operations we do will follow something like this:
+So we loop and read operators for the next binary expression and compares the binding powers of the expression on the left side with the binding power of the upcoming operator. Let's say we have a multiplication followed by addition, such as `a * b +`. The operations we do will follow something like this:
 
 * Parsing an expression produced `a`, we check if an operator follows, it does. We starting with the default left binding power, or `lbp` set to `0`, so we use `'*'` as an operator and attempt to construct the right hand side of the binary expression.
 * We jump, or *descend* one stack frame down when calling `parse_simple_expression`. This will first give us an expression for the next token without bothering with operators, in our case we get `b`, we pop back and return to our loop.
